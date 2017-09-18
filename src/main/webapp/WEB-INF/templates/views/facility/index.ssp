@@ -1,0 +1,22 @@
+<% import com.incra.model.Facility %>
+<%@ val facilities: List[com.incra.model.Facility] %>
+
+<div style="margin-top: 30px; background: #ccc; padding: 10px">
+<h3>The current facilities are:</h3>
+<table class="table">
+    <tr>
+        <th>Name</th>
+        <th>Lat</th>
+        <th>Lng</th>
+        <th>Capacity</th>
+    </tr>
+    #for (facility <- facilities)
+        <tr>
+            <td><a href="/facility/${facility.id}">${facility.name}</a></td>
+            <td>${facility.lat}</td>
+            <td>${facility.lng}</td>
+            <td>${facility.capacity}</td>
+        </tr>
+    #end
+</table>
+</div>

@@ -1,0 +1,159 @@
+<% import com.incra.model.Origin %>
+<% import com.incra.model.GridCell %>
+
+<%@ val originOpt: Option[com.incra.model.Origin] %>
+<%@ val gridCells: Seq[com.incra.model.GridCell] %>
+<%@ val origins: Seq[com.incra.model.Origin] %>
+<%@ val sites: Seq[com.incra.model.Site] %>
+
+
+<style>
+
+  #map {
+    height: 500px;
+    width: 700px;
+  }
+</style>
+
+<div class="row" style="margin-top: 30px">
+  <div class="col-md-8" style="background: #ccc; padding: 10px">
+    Projected Spread
+    </br>
+    <div id="map"></div>
+  </div>
+  <div class="col-md-4">
+    <h4>Time</h4>
+    <select name="dayIndex">
+      <option value="0">Onset</option>
+      <option value="1">1 Day</option>
+      <option value="2">2 Days</option>
+      <option value="3">3 Days</option>
+      <option value="4">4 Days</option>
+      <option value="5">5 Days</option>
+    </select>
+    <p>&nbsp;</p>
+
+    #if (origins.size > 0)
+    <h4>Case Tracking</h4>
+    <table class="table">
+    <tr>
+    <th>Name</th>
+    <th>Date</th>
+    <th>Lat</th>
+    <th>Lng</th>
+    </tr>
+    #for (origin <- origins)
+    <tr>
+    <td>${origin.name}</td>
+        <td>${origin.date}</td>
+
+    <td>${origin.lat}</td>
+        <td>${origin.lat}</td>
+
+    </tr>
+      #end
+    </table>
+      #end
+  </div>
+</div>
+
+<script>
+
+var map;
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: {lat: 6.413, lng: -10.644},
+    zoom: 8
+  });
+
+  #if (originOpt.isDefined)
+  var marker = new google.maps.Marker({
+    position: {lat: ${originOpt.get.lat}, lng: ${originOpt.get.lng}},
+    map: map,
+    title: '${originOpt.get.name}'
+  });
+  #end
+
+#for (gridCell <- gridCells)
+  new google.maps.Rectangle({
+    strokeWeight: 0,
+    fillColor: '#FF0000',
+    fillOpacity: ${gridCell.probability},
+    map: map,
+    bounds: new google.maps.LatLngBounds(
+        new google.maps.LatLng(${gridCell.lowerLeftLat}, ${gridCell.lowerLeftLng}), // lower left
+        new google.maps.LatLng(${gridCell.upperRightLat}, ${gridCell.upperRightLng})) // upper right
+  });
+#end
+
+var line1 = [
+          {lat: 6.645, lng: -9.48},
+          {lat: 6.400, lng: -15.00}
+        ];
+        new google.maps.Polyline({
+          path: line1,
+          geodesic: true,
+          strokeColor: '#00FFFF',
+          strokeOpacity: 1.0,
+          strokeWeight: 2,
+          map: map
+        });
+
+var line2 = [
+          {lat: 6.645, lng: -9.48},
+          {lat: 6.100, lng: -12.00}
+        ];
+        new google.maps.Polyline({
+          path: line2,
+          geodesic: true,
+          strokeColor: '#00FFFF',
+          strokeOpacity: 1.0,
+          strokeWeight: 2,
+          map: map
+        });
+
+var line3 = [
+          {lat: 6.645, lng: -9.48},
+          {lat: 6.945, lng: -9.95}
+        ];
+        new google.maps.Polyline({
+          path: line3,
+          geodesic: true,
+          strokeColor: '#333333',
+          strokeOpacity: 1.0,
+          strokeWeight: 2,
+          map: map
+        });
+
+        var line4 = [
+          {lat: 6.945, lng: -9.95},
+          {lat: 6.427, lng: -10.733}
+        ];
+        new google.maps.Polyline({
+          path: line4,
+          geodesic: true,
+          strokeColor: '#333333',
+          strokeOpacity: 1.0,
+          strokeWeight: 2,
+          map: map
+        });
+
+#for (site <- sites)
+  new google.maps.Circle({
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#008000',
+    fillOpacity: 0.35,
+    map: map,
+    center: new google.maps.LatLng(${site.lat}, ${site.lng}),
+    radius: 5000
+  });
+#end
+
+}
+</script>
+
+ <script src="https://maps.googleapis.com/maps/api/js?callback=initMap"
+        async defer>
+</script>
