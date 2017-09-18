@@ -6,6 +6,7 @@
 <table class="table">
     <tr>
         <th>Name</th>
+        <th>Type</th>
         <th>Lat</th>
         <th>Lng</th>
         <th>Capacity</th>
@@ -13,6 +14,7 @@
     #for (facility <- facilities)
         <tr>
             <td><a href="/facility/${facility.id}">${facility.name}</a></td>
+            <td>${facility.facilityType}</td>
             <td>${facility.lat}</td>
             <td>${facility.lng}</td>
             <td>${facility.capacity}</td>

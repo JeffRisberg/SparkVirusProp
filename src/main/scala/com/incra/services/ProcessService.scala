@@ -1,18 +1,29 @@
 package com.incra.services
 
 import com.incra.model.{GridCell, Particle}
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.random.MersenneTwister
 
 /**
- * Created by jeff on 9/8/15.
- */
+  * @author Jeff Risberg
+  * @since 9/8/15
+  */
 class ProcessService extends Serializable {
 
-  def run(gridCells: Seq[GridCell], numTimesteps: Int, numTrials: Int, parallelism: Int): Array[(Option[GridCell],Int)] = {
+  /**
+    * Spin up a Spark instance, specify the timesteps and trials for the prediction.
+    *
+    * Return a series of GridCells.
+    *
+    * @param gridCells
+    * @param numTimesteps
+    * @param numTrials
+    * @param parallelism
+    * @return
+    */
+  def run(gridCells: Seq[GridCell], numTimesteps: Int, numTrials: Int, parallelism: Int): Array[(Option[GridCell], Int)] = {
 
     val conf = new SparkConf()
       .setAppName("SparkVirusPropagation")

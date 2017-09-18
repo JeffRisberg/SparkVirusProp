@@ -6,7 +6,9 @@
   <tr>
     <td>Name:</td><td>${facility.name}</td>
   </tr>
-
+  <tr>
+    <td>Type:</td><td>${facility.facilityType}</td>
+  </tr>
   <tr>
     <td>Lat:</td><td>${facility.lat}</td>
   </tr>

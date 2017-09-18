@@ -1,13 +1,13 @@
 package com.incra.model
 
 /**
- * Created by jeff on 9/8/15.
- */
-
+  * @author Jeff Risberg
+  * @since 9/8/15
+  */
 case class GridCell(lat: Double,
                     lng: Double,
                     var probability: Double
-                     ) {
+                   ) {
 
   def containsPoint(lat: Double, lng: Double) =
     (lat >= this.lowerLeftLat && lat <= this.upperRightLat &&
