@@ -1,10 +1,13 @@
 <% import com.incra.model.Origin %>
 <% import com.incra.model.GridCell %>
+<% import com.incra.model.Site %>
+<% import com.incra.model.Facility %>
 
 <%@ val originOpt: Option[com.incra.model.Origin] %>
 <%@ val gridCells: Seq[com.incra.model.GridCell] %>
 <%@ val origins: Seq[com.incra.model.Origin] %>
 <%@ val sites: Seq[com.incra.model.Site] %>
+<%@ val facilities: Seq[com.incra.model.Facility] %>
 
 
 <style>
@@ -149,6 +152,19 @@
     });
   #end
 
+  #for (facility <- facilities)
+    new google.maps.Rectangle({
+    strokeColor: '#00FF00',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#008080',
+    fillOpacity: 0.35,
+    map: map,
+    bounds: new google.maps.LatLngBounds(
+    new google.maps.LatLng(${facility.lat}-0.05, ${facility.lng}-0.05), // lower left
+    new google.maps.LatLng(${facility.lat}+0.05, ${facility.lng}+0.05)) // upper right
+    });
+  #end
   }
 </script>
 

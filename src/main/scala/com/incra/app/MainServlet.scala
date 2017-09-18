@@ -5,9 +5,9 @@ import com.incra.model.GridCell
 import com.incra.services._
 
 /**
- * @author Jeff Risberg
- * @since late August 2015
- */
+  * @author Jeff Risberg
+  * @since late August 2015
+  */
 class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearchStack {
 
   private def siteService = inject[SiteService]
@@ -69,9 +69,15 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
 
     val origins = originService.getEntityList()
     val sites = siteService.getEntityList()
+    val facilities = facilityService.getEntityList()
 
     val data1 = List("title" -> "Spark Virus Prop Example")
-    val data2 = data1 ++ List("originOpt" -> None, "gridCells" -> gridCells, "origins" -> origins, "sites" -> sites)
+    val data2 = data1 ++ List(
+      "originOpt" -> None,
+      "gridCells" -> gridCells,
+      "origins" -> origins,
+      "sites" -> sites,
+      "facilities" -> facilities)
 
     ssp("/map/index", data2.toSeq: _*)
   }
@@ -234,11 +240,17 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
 
     val origins = originService.getEntityList()
     val sites = siteService.getEntityList()
+    val facilities = facilityService.getEntityList()
 
     val originOpt = if (params.contains("id")) originService.findById(params("id").toLong) else None
 
     val data1 = List("title" -> "Spark Virus Prop Example")
-    val data2 = data1 ++ List("originOpt" -> originOpt, "gridCells" -> gridCells, "origins" -> origins, "sites" -> sites)
+    val data2 = data1 ++ List(
+      "originOpt" -> originOpt,
+      "gridCells" -> gridCells,
+      "origins" -> origins,
+      "sites" -> sites,
+      "facilities" -> facilities)
 
     ssp("/map/index", data2.toSeq: _*)
   }
