@@ -4,13 +4,14 @@
 <% import com.incra.model.Facility %>
 
 <%@ val originOpt: Option[com.incra.model.Origin] %>
+<%@ val siteOpt: Option[com.incra.model.Site] %>
 <%@ val gridCells: Seq[com.incra.model.GridCell] %>
 <%@ val origins: Seq[com.incra.model.Origin] %>
 <%@ val sites: Seq[com.incra.model.Site] %>
 <%@ val facilities: Seq[com.incra.model.Facility] %>
 <%@ val dayIndex: Int %>
-<%@ val windX: Double %>
-<%@ val windY: Double %>
+<%@ val windSpd: Double %>
+<%@ val windHdg: Double %>
 <%@ val facilitiesActive: Boolean %>
 
 <style>
@@ -29,20 +30,21 @@
 </div>
 <div class="col-md-4">
 <form id="mapSettingsForm" method="POST" action="/process">
-  <h4>Time</h4>
-  <select id="dayIndex" name="dayIndex">
-    <option ${(if (dayIndex == 0) "selected" else "")} value="0">Onset</option>
-    <option ${(if (dayIndex == 1) "selected" else "")} value="1">1 Day</option>
-    <option ${(if (dayIndex == 2) "selected" else "")} value="2">2 Days</option>
-    <option ${(if (dayIndex == 3) "selected" else "")} value="3">3 Days</option>
-    <option ${(if (dayIndex == 4) "selected" else "")} value="4">4 Days</option>
-    <option ${(if (dayIndex == 5) "selected" else "")} value="5">5 Days</option>
-  </select>
-  <p>&nbsp;</p>
-  Wind (Lat): <input name="windX" type="text" value="${windX}"/>
-  <br/>
-  Wind (Lng): <input name="windY" type="text" value="${windY}"/>
-  <br>
+<h4>Settings</h4>
+Time:
+<select id="dayIndex" name="dayIndex">
+<option ${(if (dayIndex == 0) "selected" else "")} value="0">Onset</option>
+<option ${(if (dayIndex == 1) "selected" else "")} value="1">1 Day</option>
+<option ${(if (dayIndex == 2) "selected" else "")} value="2">2 Days</option>
+<option ${(if (dayIndex == 3) "selected" else "")} value="3">3 Days</option>
+<option ${(if (dayIndex == 4) "selected" else "")} value="4">4 Days</option>
+<option ${(if (dayIndex == 5) "selected" else "")} value="5">5 Days</option>
+</select>
+<br/>
+Wind (speed mph): <input name="windSpd" type="text" size="7" value="${windSpd}"/> <input type="submit" value="Go" />
+<br/>
+Wind (heading deg): <input name="windHdg" type="text" size="7" value="${("%03.0f" format windHdg)}"/> <input type="submit" value="Go" />
+<br>
   <input type="checkbox" id="facilitiesActive" name="facilitiesActive" ${(if (facilitiesActive) "checked" else "")} />
   Facilities Active
   </form>
@@ -57,7 +59,7 @@
       <th>Lng</th>
     </tr>
     #for (origin <- origins)
-      <tr>
+      <tr bgcolor="${(if (origin == originOpt.getOrElse(null)) "#ff9090" else "white")}">
         <td>${origin.name}</td>
         <td>${origin.date}</td>
         <td>${origin.lat}</td>
@@ -83,6 +85,14 @@
     position: {lat: ${originOpt.get.lat}, lng: ${originOpt.get.lng}},
     map: map,
     title: '${originOpt.get.name}'
+    });
+  #end
+
+  #if (siteOpt.isDefined)
+    var marker = new google.maps.Marker({
+    position: {lat: ${siteOpt.get.lat}, lng: ${siteOpt.get.lng}},
+    map: map,
+    title: '${siteOpt.get.name}'
     });
   #end
 

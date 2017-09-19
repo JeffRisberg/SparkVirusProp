@@ -22,10 +22,10 @@ class SiteService(implicit val bindingModule: BindingModule) extends Injectable 
       if (MTable.getTables("site").list().isEmpty) {
         (sites.ddl).create
 
-        sites += Site(None, "Loading Dock at River", 6.383, -10.031)
-        sites += Site(None, "Cave Bats with Histoplasmosis", 6.427425, -10.732664)
-        sites += Site(None, "Forest Canopy with Droppings", 6.945, -9.95)
-        sites += Site(None, "Downstream Facilities", 6.645, -9.48)
+        sites += Site(None, "Loading Dock at River", 6.836, -10.484)
+        sites += Site(None, "Cave Bats with Histoplasmosis", 6.716, -10.275)
+        sites += Site(None, "Forest Canopy with Droppings", 6.997, -9.614)
+        sites += Site(None, "Downstream Facilities", 6.6512, -10.6131)
       }
   }
   println("EndInitSiteService")

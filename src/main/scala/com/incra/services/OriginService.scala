@@ -25,11 +25,11 @@ class OriginService(implicit val bindingModule: BindingModule) extends Injectabl
         (origins.ddl).create
 
         origins += Origin(None, "Initial Case", new Date(115, 5, 5), 7.023, -9.44)
-        origins += Origin(None, "Followup #1", new Date(115, 5, 8), 6.427425, -10.732664)
+        origins += Origin(None, "Followup #1", new Date(115, 5, 8), 7.002, -9.55)
         origins += Origin(None, "Followup #2", new Date(115, 5, 9), 6.945, -9.95)
-        origins += Origin(None, "Followup #3", new Date(115, 5, 10), 6.645, -9.48)
-        origins += Origin(None, "Followup #4", new Date(115, 5, 10), 6.745, -9.12)
-        origins += Origin(None, "Followup #5", new Date(115, 5, 10), 6.645, -9.67)
+        origins += Origin(None, "Followup #3", new Date(115, 5, 10), 6.745, -10.11)
+        origins += Origin(None, "Followup #4", new Date(115, 5, 10), 6.645, -10.24)
+        origins += Origin(None, "Followup #5", new Date(115, 5, 10), 6.427425, -10.732664)
       }
   }
   println("EndInitOriginService")

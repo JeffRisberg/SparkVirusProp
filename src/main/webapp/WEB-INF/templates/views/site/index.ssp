@@ -15,7 +15,7 @@
             <td><a href="/site/${site.id}">${site.name}</a></td>
             <td>${site.lat}</td>
             <td>${site.lng}</td>
-            <td><a href="/map?id=${site.id}">Map</a></td>
+            <td><a href="/map?siteId=${site.id}">Map</a></td>
         </tr>
     #end
 </table>

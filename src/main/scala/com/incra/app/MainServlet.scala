@@ -11,6 +11,9 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearchStack {
 
+  val rootLat = 7.02
+  val rootLng = -9.44
+
   private def siteService = inject[SiteService]
 
   private def activityService = inject[ActivityService]
@@ -31,14 +34,14 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
     yield {
       GridCell(lat, lng, 0.0)
     }
+  var baseLat = rootLat
+  var baseLng = rootLng
   var dayIndex = 0
-  var windX = 0.0
-  var windY = 0.0
+  var windSpd = 0.0
+  var windHdg = 0.0
   var facilitiesActive = false
 
   private val gcBroadcast = sc.broadcast(gridCells)
-
-  predict(dayIndex)
 
   get("/") {
     contentType = "text/html"
@@ -209,8 +212,8 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
   post("/process") {
     dayIndex = params.get("dayIndex").get.toInt
 
-    windX = params.get("windX").get.toDouble
-    windY = params.get("windY").get.toDouble
+    windSpd = params.get("windSpd").get.toDouble
+    windHdg = params.get("windHdg").get.toDouble
     facilitiesActive = params.get("facilitiesActive").getOrElse("") == "on"
 
     predict(dayIndex)
@@ -230,7 +233,7 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
     val numTrials = 5000
     val parallelism = 1000
 
-    val counts = processService.run(sc, gcBroadcast, gridCells, facilities, windX, windY, facilitiesActive,
+    val counts = processService.run(sc, gcBroadcast, gridCells, facilities, baseLat, baseLng, windSpd, windHdg, facilitiesActive,
       numTimesteps, numTrials, parallelism)
 
     // update the cells
@@ -260,16 +263,28 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
 
     val originOpt = if (params.contains("id")) originService.findById(params("id").toLong) else None
 
+    if (originOpt.isDefined) {
+      baseLat = originOpt.get.lat
+      baseLng = originOpt.get.lng
+    }
+    else {
+      baseLat = rootLat
+      baseLng = rootLng
+    }
+
+    val siteOpt = if (params.contains("siteId")) siteService.findById(params("siteId").toLong) else None
+
     val data1 = List("title" -> "Spark Virus Prop Example")
     val data2 = data1 ++ List(
       "originOpt" -> originOpt,
+      "siteOpt" -> siteOpt,
       "gridCells" -> gridCells,
       "origins" -> origins,
       "sites" -> sites,
       "facilities" -> facilities,
       "dayIndex" -> dayIndex,
-      "windX" -> windX,
-      "windY" -> windY,
+      "windSpd" -> windSpd,
+      "windHdg" -> windHdg,
       "facilitiesActive" -> facilitiesActive)
 
     ssp("/map/index", data2.toSeq: _*)

@@ -27,7 +27,7 @@ class ProcessService extends Serializable {
   def run(sc: SparkContext,
           gcBroadcast: Broadcast[scala.collection.immutable.IndexedSeq[GridCell]],
           gridCells: Seq[GridCell],
-          facilities: Seq[Facility], windX: Double, windY: Double, facilitiesActive: Boolean,
+          facilities: Seq[Facility], baseLat: Double, baseLng: Double, windSpd: Double, windHdg: Double, facilitiesActive: Boolean,
           numTimesteps: Int,
           numTrials: Int,
           parallelism: Int): Array[(Option[GridCell], Int)] = {
@@ -35,7 +35,7 @@ class ProcessService extends Serializable {
     val baseSeed = 1001L
 
     println("start the trials!")
-    val endpoints = computeTrialReturns(sc, facilities, windX, windY, facilitiesActive, numTimesteps, baseSeed, numTrials, parallelism)
+    val endpoints = computeTrialReturns(sc, facilities, baseLat, baseLng, windSpd, windHdg, facilitiesActive, numTimesteps, baseSeed, numTrials, parallelism)
     endpoints.cache()
 
     println("print the results")
@@ -60,7 +60,7 @@ class ProcessService extends Serializable {
     counts.collect
   }
 
-  def computeTrialReturns(sc: SparkContext, facilities: Seq[Facility], windX: Double, windY: Double, facilitiesActive: Boolean,
+  def computeTrialReturns(sc: SparkContext, facilities: Seq[Facility], baseLat: Double, baseLng: Double, windSpd: Double, windHdg: Double, facilitiesActive: Boolean,
                           numTimesteps: Int,
                           baseSeed: Long,
                           numTrials: Int,
@@ -72,20 +72,22 @@ class ProcessService extends Serializable {
 
     // Main computation: run simulations and compute aggregate return for each
     seedRdd.flatMap(
-      trialResults(facilities, windX, windY, facilitiesActive, _, numTimesteps, numTrials / parallelism))
+      trialResults(facilities, baseLat, baseLng, windSpd, windHdg, facilitiesActive, _, numTimesteps, numTrials / parallelism))
   }
 
-  def trialResults(facilities: Seq[Facility], windX: Double, windY: Double, facilitiesActive: Boolean, seed: Long, numTimesteps: Int, numTrials: Int): Seq[Particle] = {
+  def trialResults(facilities: Seq[Facility], baseLat: Double, baseLng: Double, windSpd: Double, windHdg: Double, facilitiesActive: Boolean, seed: Long, numTimesteps: Int, numTrials: Int): Seq[Particle] = {
 
     val rand = new MersenneTwister(seed)
     val trialReturns = new Array[Particle](numTrials)
     val threshold = 0.05
+    val degRad = 57.2958
 
-    val latitudeDistribution = new NormalDistribution(rand, 7.02, 0.05, 0.0)
-    val longitudeDistribution = new NormalDistribution(rand, -9.44, 0.05, 0.0)
+    val latitudeDistribution = new NormalDistribution(rand, baseLat, 0.05, 0.0)
+    val longitudeDistribution = new NormalDistribution(rand, baseLng, 0.05, 0.0)
 
-    val baseDLat = -0.0013 + windX
-    val baseDLng = -0.0035 + windY
+    val angle = ((windHdg + 360) % 360) / degRad
+    val baseDLat = -0.0013 + Math.cos(angle) * windSpd / 1200.0
+    val baseDLng = -0.0035 + Math.sin(angle) * windSpd / 1200.0
 
     val dLatitudeDistribution = new NormalDistribution(rand, baseDLat, 0.0009, 0.0)
     val dLongitudeDistribution = new NormalDistribution(rand, baseDLng, 0.0020, 0.0)
