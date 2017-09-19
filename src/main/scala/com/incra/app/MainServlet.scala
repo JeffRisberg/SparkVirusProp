@@ -3,6 +3,7 @@ package com.incra.app
 import com.escalatesoft.subcut.inject.BindingModule
 import com.incra.model.GridCell
 import com.incra.services._
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author Jeff Risberg
@@ -18,11 +19,26 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
 
   private def originService = inject[OriginService]
 
+  private val conf = new SparkConf()
+    .setAppName("SparkVirusPropagation")
+    .set("spark.executor.memory", "6g")
+    .setMaster("local[4]")
+
+  private val sc = new SparkContext(conf)
+
   val gridCells = for (lat <- 5.6 to 7.8 by 0.2;
                        lng <- -11.0 to -9.0 by 0.2)
     yield {
       GridCell(lat, lng, 0.0)
     }
+  var dayIndex = 0
+  var windX = 0.0
+  var windY = 0.0
+  var facilitiesActive = false
+
+  private val gcBroadcast = sc.broadcast(gridCells)
+
+  predict(dayIndex)
 
   get("/") {
     contentType = "text/html"
@@ -31,55 +47,6 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
     val data2 = data1 ++ List("city" -> "Palo Alto", "state" -> "California", "population" -> 66363)
 
     ssp("/index", data2.toSeq: _*)
-  }
-
-  get("/process") {
-
-    // clear the values in the grid cells
-    gridCells.foreach(_.probability = 0.0)
-
-    //run the process
-    val processService = new ProcessService()
-
-    val numTimesteps = 250
-    val numTrials = 10000
-    val parallelism = 1000
-
-    val counts = processService.run(gridCells, numTimesteps, numTrials, parallelism)
-
-    // update the cells
-    val maxCount = counts.map { case (gridCellOpt, count) => if (gridCellOpt.isDefined) count else 0 }.max
-
-    if (maxCount > 0) {
-      counts.foreach { case (gridCellOpt, count) =>
-        if (gridCellOpt.isDefined) {
-          val gridCell = gridCellOpt.get
-          var realGridCellOpt = gridCells.find { realGridCell => (realGridCell.lat == gridCell.lat && realGridCell.lng == gridCell.lng) }
-
-          if (realGridCellOpt.isDefined) {
-            val realGridCell = realGridCellOpt.get
-            realGridCell.probability = Math.min(1.0, count.toDouble / maxCount.toDouble)
-          }
-        }
-      }
-    }
-
-    // run the map
-    contentType = "text/html"
-
-    val origins = originService.getEntityList()
-    val sites = siteService.getEntityList()
-    val facilities = facilityService.getEntityList()
-
-    val data1 = List("title" -> "Spark Virus Prop Example")
-    val data2 = data1 ++ List(
-      "originOpt" -> None,
-      "gridCells" -> gridCells,
-      "origins" -> origins,
-      "sites" -> sites,
-      "facilities" -> facilities)
-
-    ssp("/map/index", data2.toSeq: _*)
   }
 
   get("/site") {
@@ -236,6 +203,55 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
   }
 
   get("/map") {
+    displayMap()
+  }
+
+  post("/process") {
+    dayIndex = params.get("dayIndex").get.toInt
+
+    windX = params.get("windX").get.toDouble
+    windY = params.get("windY").get.toDouble
+    facilitiesActive = params.get("facilitiesActive").getOrElse("") == "on"
+
+    predict(dayIndex)
+
+    displayMap()
+  }
+
+  def predict(dayIndex: Int): Unit = {
+    // clear the values in the grid cells
+    gridCells.foreach(_.probability = 0.0)
+
+    // run the process
+    val processService = new ProcessService()
+
+    val facilities = facilityService.getEntityList()
+    val numTimesteps = 50 * dayIndex
+    val numTrials = 5000
+    val parallelism = 1000
+
+    val counts = processService.run(sc, gcBroadcast, gridCells, facilities, windX, windY, facilitiesActive,
+      numTimesteps, numTrials, parallelism)
+
+    // update the cells
+    val maxCount = counts.map { case (gridCellOpt, count) => if (gridCellOpt.isDefined) count else 0 }.max
+
+    if (maxCount > 0) {
+      counts.foreach { case (gridCellOpt, count) =>
+        if (gridCellOpt.isDefined) {
+          val gridCell = gridCellOpt.get
+          var realGridCellOpt = gridCells.find { realGridCell => (realGridCell.lat == gridCell.lat && realGridCell.lng == gridCell.lng) }
+
+          if (realGridCellOpt.isDefined) {
+            val realGridCell = realGridCellOpt.get
+            realGridCell.probability = Math.min(1.0, count.toDouble / maxCount.toDouble)
+          }
+        }
+      }
+    }
+  }
+
+  def displayMap(): String = {
     contentType = "text/html"
 
     val origins = originService.getEntityList()
@@ -250,7 +266,11 @@ class MainServlet(implicit val bindingModule: BindingModule) extends SparkSearch
       "gridCells" -> gridCells,
       "origins" -> origins,
       "sites" -> sites,
-      "facilities" -> facilities)
+      "facilities" -> facilities,
+      "dayIndex" -> dayIndex,
+      "windX" -> windX,
+      "windY" -> windY,
+      "facilitiesActive" -> facilitiesActive)
 
     ssp("/map/index", data2.toSeq: _*)
   }

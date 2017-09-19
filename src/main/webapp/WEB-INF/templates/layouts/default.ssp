@@ -12,7 +12,7 @@
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </head>
 <body>
-    <header><a href="/"><img src="/images/sparksearch_logo.png" alt="SparkVirusProp"/></a></header>
+    <header><a href="/"><img src="/images/sparkvirusprop_logo.png" alt="SparkVirusProp"/></a></header>
     <div class="container">
         <%= unescape(body) %>
     </div>

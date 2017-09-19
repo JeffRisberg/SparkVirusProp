@@ -8,7 +8,10 @@
 <%@ val origins: Seq[com.incra.model.Origin] %>
 <%@ val sites: Seq[com.incra.model.Site] %>
 <%@ val facilities: Seq[com.incra.model.Facility] %>
-
+<%@ val dayIndex: Int %>
+<%@ val windX: Double %>
+<%@ val windY: Double %>
+<%@ val facilitiesActive: Boolean %>
 
 <style>
 
@@ -19,22 +22,30 @@
 </style>
 
 <div class="row" style="margin-top: 30px">
-  <div class="col-md-8" style="background: #ccc; padding: 10px">
-    Projected Spread
-  </br>
-  <div id="map"></div>
+<div class="col-md-8" style="background: #ccc; padding: 10px">
+  Projected Spread
+</br>
+<div id="map"></div>
 </div>
 <div class="col-md-4">
+<form id="mapSettingsForm" method="POST" action="/process">
   <h4>Time</h4>
-  <select name="dayIndex">
-    <option value="0">Onset</option>
-    <option value="1">1 Day</option>
-    <option value="2">2 Days</option>
-    <option value="3">3 Days</option>
-    <option value="4">4 Days</option>
-    <option value="5">5 Days</option>
+  <select id="dayIndex" name="dayIndex">
+    <option ${(if (dayIndex == 0) "selected" else "")} value="0">Onset</option>
+    <option ${(if (dayIndex == 1) "selected" else "")} value="1">1 Day</option>
+    <option ${(if (dayIndex == 2) "selected" else "")} value="2">2 Days</option>
+    <option ${(if (dayIndex == 3) "selected" else "")} value="3">3 Days</option>
+    <option ${(if (dayIndex == 4) "selected" else "")} value="4">4 Days</option>
+    <option ${(if (dayIndex == 5) "selected" else "")} value="5">5 Days</option>
   </select>
   <p>&nbsp;</p>
+  Wind (Lat): <input name="windX" type="text" value="${windX}"/>
+  <br/>
+  Wind (Lng): <input name="windY" type="text" value="${windY}"/>
+  <br>
+  <input type="checkbox" id="facilitiesActive" name="facilitiesActive" ${(if (facilitiesActive) "checked" else "")} />
+  Facilities Active
+  </form>
 
   #if (origins.size > 0)
     <h4>Case Tracking</h4>
@@ -63,8 +74,8 @@
   var map;
   function initMap() {
   map = new google.maps.Map(document.getElementById('map'), {
-  center: {lat: 6.413, lng: -10.644},
-  zoom: 8
+  center: {lat: 6.503, lng: -10.044},
+  zoom: 9
   });
 
   #if (originOpt.isDefined)
@@ -86,58 +97,6 @@
     new google.maps.LatLng(${gridCell.upperRightLat}, ${gridCell.upperRightLng})) // upper right
     });
   #end
-
-  var line1 = [
-  {lat: 6.645, lng: -9.48},
-  {lat: 6.400, lng: -15.00}
-  ];
-  new google.maps.Polyline({
-  path: line1,
-  geodesic: true,
-  strokeColor: '#00FFFF',
-  strokeOpacity: 1.0,
-  strokeWeight: 2,
-  map: map
-  });
-
-  var line2 = [
-  {lat: 6.645, lng: -9.48},
-  {lat: 6.100, lng: -12.00}
-  ];
-  new google.maps.Polyline({
-  path: line2,
-  geodesic: true,
-  strokeColor: '#00FFFF',
-  strokeOpacity: 1.0,
-  strokeWeight: 2,
-  map: map
-  });
-
-  var line3 = [
-  {lat: 6.645, lng: -9.48},
-  {lat: 6.945, lng: -9.95}
-  ];
-  new google.maps.Polyline({
-  path: line3,
-  geodesic: true,
-  strokeColor: '#333333',
-  strokeOpacity: 1.0,
-  strokeWeight: 2,
-  map: map
-  });
-
-  var line4 = [
-  {lat: 6.945, lng: -9.95},
-  {lat: 6.427, lng: -10.733}
-  ];
-  new google.maps.Polyline({
-  path: line4,
-  geodesic: true,
-  strokeColor: '#333333',
-  strokeOpacity: 1.0,
-  strokeWeight: 2,
-  map: map
-  });
 
   #for (site <- sites)
     new google.maps.Circle({
@@ -166,6 +125,20 @@
     });
   #end
   }
+</script>
+
+<script>
+  $( document ).ready(function() {
+
+  $( "#dayIndex" ).change(function() {
+  $("#mapSettingsForm").submit();
+  });
+
+  $( "#facilitiesActive" ).change(function() {
+  $("#mapSettingsForm").submit();
+  });
+
+  });
 </script>
 
 <script src="https://maps.googleapis.com/maps/api/js?callback=initMap"
