@@ -79,7 +79,7 @@ class ProcessService extends Serializable {
 
     val rand = new MersenneTwister(seed)
     val trialReturns = new Array[Particle](numTrials)
-    val threshold = 0.05
+    val threshold = 0.075
     val degRad = 57.2958
 
     val latitudeDistribution = new NormalDistribution(rand, baseLat, 0.05, 0.0)
@@ -105,8 +105,9 @@ class ProcessService extends Serializable {
         for (facility <- facilities) {
           val dLat = target.x - facility.lat
           val dLng = target.y - facility.lng
+          val dist = Math.sqrt(dLat * dLat + dLng * dLng)
 
-          if (facilitiesActive && Math.abs(dLat) < threshold && Math.abs(dLng) < threshold) {
+          if (facilitiesActive && dist < threshold) {
             target.active = false
           }
         }
